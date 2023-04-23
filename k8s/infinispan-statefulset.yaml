@@ -1,0 +1,176 @@
+kind: StatefulSet
+apiVersion: apps/v1
+metadata:
+  annotations:
+    openshift.io/display-name: Infinispan Cluster
+    openshift.io/documentation-url: 'http://infinispan.org/documentation/'
+  resourceVersion: '7301499'
+  name: example-infinispan
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: infinispan-pod
+      app.kubernetes.io/created-by: example-infinispan
+      clusterName: example-infinispan
+      infinispan_cr: example-infinispan
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: infinispan-pod
+        app.kubernetes.io/created-by: example-infinispan
+        clusterName: example-infinispan
+        infinispan_cr: example-infinispan
+      annotations:
+        updateDate: '2023-04-23 18:00:27.404883897 +0000 UTC m=+22931.803679154'
+    spec:
+      volumes:
+        - name: config-volume
+          configMap:
+            name: example-infinispan-configuration
+            defaultMode: 420
+        - name: infinispan-security-volume
+          secret:
+            secretName: example-infinispan-infinispan-security
+            defaultMode: 420
+        - name: identities-volume
+          secret:
+            secretName: example-infinispan-generated-secret
+            defaultMode: 420
+        - name: encrypt-volume
+          secret:
+            secretName: example-infinispan-cert-secret
+            defaultMode: 420
+      containers:
+        - resources:
+            limits:
+              memory: 1Gi
+            requests:
+              memory: 1Gi
+          readinessProbe:
+            httpGet:
+              path: rest/v2/cache-managers/default/health/status
+              port: 11223
+              scheme: HTTP
+            timeoutSeconds: 80
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 5
+          terminationMessagePath: /dev/termination-log
+          name: infinispan
+          livenessProbe:
+            httpGet:
+              path: rest/v2/cache-managers/default/health/status
+              port: 11223
+              scheme: HTTP
+            timeoutSeconds: 80
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 5
+          env:
+            - name: MANAGED_ENV
+              value: 'TRUE'
+            - name: JAVA_OPTIONS
+              value: >-
+                -Xmx200M -Xms200M -XX:MaxRAM=420M
+                -Dsun.zip.disableMemoryMapping=true -XX:+UseSerialGC
+                -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 
+            - name: EXTRA_JAVA_OPTIONS
+            - name: CLI_JAVA_OPTIONS
+            - name: CONFIG_HASH
+              value: 625830dfa27bf575e6fc0d1d8d568154fb3985d8
+            - name: ADMIN_IDENTITIES_HASH
+              value: b726d2b3f9a98318181bbef0a4d81909656d39c5
+            - name: IDENTITIES_BATCH
+              value: /etc/security/conf/operator-security/identities.cli
+            - name: IDENTITIES_HASH
+              value: d594569a4617d20c70c086e3ad102a7e9f31049b
+            - name: KEYSTORE_HASH
+              value: >-
+                a1000c0b9188005aede6dc69e4321c5fabcb0934da39a3ee5e6b4b0d3255bfef95601890afd80709
+          ports:
+            - name: infinispan-adm
+              containerPort: 11223
+              protocol: TCP
+            - name: ping
+              containerPort: 8888
+              protocol: TCP
+            - name: infinispan
+              containerPort: 11222
+              protocol: TCP
+          imagePullPolicy: IfNotPresent
+          startupProbe:
+            httpGet:
+              path: rest/v2/cache-managers/default/health/status
+              port: 11223
+              scheme: HTTP
+            initialDelaySeconds: 1
+            timeoutSeconds: 80
+            periodSeconds: 1
+            successThreshold: 1
+            failureThreshold: 600
+          volumeMounts:
+            - name: config-volume
+              mountPath: /opt/infinispan/server/conf/operator
+            - name: infinispan-security-volume
+              mountPath: /etc/security/conf/operator-security
+            - name: data-volume
+              mountPath: /opt/infinispan/server/data
+            - name: identities-volume
+              mountPath: /etc/security/user
+            - name: encrypt-volume
+              mountPath: /etc/encrypt/keystore
+          terminationMessagePolicy: File
+          image: 'quay.io/infinispan/server:14.0.6.Final'
+          args:
+            - '-l'
+            - /opt/infinispan/server/conf/operator/log4j.xml
+            - '-c'
+            - operator/infinispan-base.xml
+            - '-c'
+            - operator/infinispan-admin.xml
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      securityContext: {}
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: infinispan-pod
+                    clusterName: example-infinispan
+                    infinispan_cr: example-infinispan
+                topologyKey: kubernetes.io/hostname
+      schedulerName: default-scheduler
+  volumeClaimTemplates:
+    - kind: PersistentVolumeClaim
+      apiVersion: v1
+      metadata:
+        name: data-volume
+        namespace: devopsdays
+        creationTimestamp: null
+        ownerReferences:
+          - apiVersion: infinispan.org/v1
+            kind: Infinispan
+            name: example-infinispan
+            uid: b41cbfc5-0824-440a-87ad-acfeeb4fbd64
+            controller: true
+            blockOwnerDeletion: false
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+        volumeMode: Filesystem
+      status:
+        phase: Pending
+  serviceName: ''
+  podManagementPolicy: OrderedReady
+  updateStrategy:
+    type: RollingUpdate
+  revisionHistoryLimit: 10
