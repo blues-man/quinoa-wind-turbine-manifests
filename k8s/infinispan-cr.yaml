@@ -4,6 +4,7 @@ metadata:
   annotations:
     infinispan.org/monitoring: 'true'
   name: example-infinispan
+  namespace: devopsdays
 spec:
   affinity:
     podAntiAffinity:
