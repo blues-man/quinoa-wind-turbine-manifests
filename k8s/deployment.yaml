@@ -41,7 +41,7 @@ spec:
             secretKeyRef:
               key: password
               name: example-infinispan-generated-secret
-        image: quay.io/blues-man/quinoa-wind-turbine:1.0.0
+        image: quay.io/bluesman/quinoa-wind-turbine:1.0.0
         imagePullPolicy: IfNotPresent
         name: quinoa-wind-turbine
         ports:
