@@ -40,7 +40,7 @@ spec:
           valueFrom:
             secretKeyRef:
               key: password
-              name: infinispan-generated-secret
+              name: example-infinispan-generated-secret
         image: quay.io/rhdevelopers/quinoa-wind-turbine:1.0.0
         imagePullPolicy: IfNotPresent
         name: quinoa-wind-turbine
