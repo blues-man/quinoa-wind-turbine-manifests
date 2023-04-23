@@ -41,6 +41,11 @@ spec:
             secretKeyRef:
               key: password
               name: infinispan-generated-secret
+        - name: INFINISPAN_HOST:
+          valueFrom:
+             secretKeyRef:
+              key: host
+              name: infinispan-generated-secret
         image: quay.io/bluesman/quinoa-wind-turbine:1.0.0
         imagePullPolicy: IfNotPresent
         name: quinoa-wind-turbine
