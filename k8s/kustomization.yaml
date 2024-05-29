@@ -2,3 +2,8 @@ resources:
 - deployment.yaml
 - service.yaml
 - route.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+images:
+- digest: sha256:bde6e2b95447416992f6e929c2e2be636f53a51bd9e1c68531bd6550e95af87a
+  name: quay.io/bluesman/quinoa-wind-turbine
