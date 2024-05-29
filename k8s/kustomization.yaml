@@ -5,5 +5,5 @@ resources:
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 images:
-- digest: sha256:bde6e2b95447416992f6e929c2e2be636f53a51bd9e1c68531bd6550e95af87a
+- digest: sha256:ef12eee0c6c224fc96feff3ebb5cf1f883d07e4a743d01a5b48f29936d775437
   name: quay.io/bluesman/quinoa-wind-turbine
